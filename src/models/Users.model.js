@@ -17,6 +17,9 @@ module.exports = (sequelize, Sequelize) => {
         area: {
             type: Sequelize.TEXT
         },
+        token: {
+            type: Sequelize.TEXT
+        },
         createdAt: {
             type: Sequelize.TIME
         },
