@@ -65,7 +65,7 @@ exports.agregar = async(req, res) => {
             // Store hash in your password DB.
             usuarios.create({
                 usuario, 
-                pass: hash, 
+                contraseña: hash, 
                 rol, 
                 area
             }).then(data => {
