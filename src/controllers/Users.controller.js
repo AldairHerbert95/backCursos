@@ -209,7 +209,7 @@ exports.login = async (req, res) => {
         if(nombre_usuario === usuario.usuario){
 
             const saltRounds = 10;
-            bcrypt.compare(pass, usuario.pass, function(err, result) {  // Compara la pass ingresada, con la guardada
+            bcrypt.compare(pass, usuario.contraseña, function(err, result) {  // Compara la pass ingresada, con la guardada
                 // Si la pass coincide...
                 if (result) {
                     bcrypt.genSalt(saltRounds, function(err, salt) {
