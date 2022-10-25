@@ -462,15 +462,30 @@ exports.eliminarUsuarioId = async (req, res) => {
 }
 
 exports.obtenerUsuario = async (req, res) => {
-    token = req.headers['x-acces-token'];
-    var decoded = jwt.decode(token);
+    const token = req.headers['x-acces-token'];
 
-    const user = {
-        id: decoded.id,
-        usuario: decoded.usuario,
-        rol: decoded.rol,
-        area: decoded.area
+    if(!token){
+        console.log(token);
+        return res.status(401).json({message: 'Sin token'});
+    }
+    else
+    {
+        var decoded = jwt.decode(token);
+
+        try{
+            const user = {
+                id: decoded.id,
+                usuario: decoded.usuario,
+                rol: decoded.rol,
+                area: decoded.area
+            }
+            return res.json(user);
+        }
+        catch{
+            return res.status(500).json({message: 'Token malformado'});
+        }
+
     }
 
-    return res.send(user);
+
 }
