@@ -2,7 +2,7 @@ const controlador = require('../controllers/Users.controller');
 
 module.exports = (app) => {
     app.get("/api/obtenerUsuarios",  controlador.consultar );
-    app.get("/api/consultarUsuarios/:id",  controlador.consultarUsuario);
+    // app.get("/api/consultarUsuarios/:id",  controlador.consultarUsuario);
     app.post("/api/agregarUsuario", controlador.agregar );
     app.put("/api/actualizarNombre/", controlador.actualizarNombre);
     app.put("/api/actualizarPass/", controlador.actualizarPass);

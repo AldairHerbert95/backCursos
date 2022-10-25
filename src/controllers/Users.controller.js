@@ -17,20 +17,20 @@ exports.consultar = async (req, res) => {
     res.send(todos);
 }
 
-exports.consultarUsuario = async (req, res) => {
-    const { id } = req.params;
+// exports.consultarUsuario = async (req, res) => {
+//     const { id } = req.params;
 
-    const _valid = idValid(id);
-    if(_valid==false){
-        return res.status(401).end('EL ID ES INCORRECTO');
-    }
+//     const _valid = idValid(id);
+//     if(_valid==false){
+//         return res.status(401).end('EL ID ES INCORRECTO');
+//     }
 
-    const usuario = await usuarios.findByPk(id);
-    if(!usuario){
-        return res.status(404).end('No existe un usuario con ese id');
-    }
-    res.send(usuario);
-}
+//     const usuario = await usuarios.findByPk(id);
+//     if(!usuario){
+//         return res.status(404).end('No existe un usuario con ese id');
+//     }
+//     res.send(usuario);
+// }
 
 exports.agregar = async(req, res) => {
     const { usuario, pass, rol, area } = req.body;
@@ -462,7 +462,7 @@ exports.eliminarUsuarioId = async (req, res) => {
 }
 
 exports.obtenerUsuario = async (req, res) => {
-    const token = req.headers['x-acces-token'];
+    const token = req.headers['x-access-token'];
 
     if(!token){
         console.log(token);
