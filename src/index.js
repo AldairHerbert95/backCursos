@@ -24,6 +24,7 @@ app.use(function(req, res, next) {
 
 require('./routes/Users.routes')(app);
 require("./routes/Videos.routes")(app);
+require("./routes/stream.routes")(app);
 
 
 //Web Sockets

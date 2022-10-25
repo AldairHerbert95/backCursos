@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const x = sequelize.define("usuarios", {
+    const Users = sequelize.define("usuarios", {
         id: {
             type: Sequelize.INTEGER,
             primaryKey: true,
@@ -27,5 +27,5 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TIME
         }
     }, {freezeTableName: true});
-    return x;
+    return Users;
 };

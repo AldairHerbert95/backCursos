@@ -18,6 +18,9 @@ export const Project = sequelize.define('projects', {
     },
     description: {
         type: DataTypes.TEXT
+    },
+    taskId: {
+        
     }
     
 }, { timestamps:true, freezeTableName: true});

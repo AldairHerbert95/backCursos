@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const x = sequelize.define("videos", {
+    const Videos = sequelize.define("videos", {
         id: {
             type: Sequelize.INTEGER,
             primaryKey: true,
@@ -9,7 +9,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT
         },
         duration: {
-            type: Sequelize.INTEGER
+            type: Sequelize.TEXT
         },
         course: {
             type: Sequelize.TEXT
@@ -18,5 +18,5 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT
         }
     }, {freezeTableName: true});
-    return x;
+    return Videos
 };

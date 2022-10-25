@@ -1,25 +1,38 @@
 const Users = require('./Users.model');
+const VideosModel = require('./Videos.model');
 const Videos = require('./Videos.model');
 
 module.exports = (sequelize, Sequelize) => {
-    const x = sequelize.define("videos", {
+    const Progress = sequelize.define("progreso", {
         id: {
             type: Sequelize.INTEGER,
-            primaryKey: true,
-            autoIncrement: true
+            primaryKey: true
         },
-        name: {
-            type: Sequelize.TEXT
+        userId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: Users,
+                key: 'id'
+            }
         },
-        duration: {
-            type: Sequelize.INTEGER
+        videoId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: Videos,
+                key: 'id'
+            }
         },
-        course: {
-            type: Sequelize.TEXT
+        progreso: {
+            type: Sequelize.DOUBLE
         },
-        path: {
-            type: Sequelize.TIME
+        done: {
+            type: Sequelize.BOOLEAN,
+            defaultValue: false
         }
     }, {freezeTableName: true});
-    return x;
+
+    Users.belongsToMany(Videos, { through: Progress });
+    Videos.belongsToMany(Users, { through: Progress });
+    return Progress;
 };
+

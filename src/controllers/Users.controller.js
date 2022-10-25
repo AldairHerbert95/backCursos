@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const index = require('../models');
 
 const usuarios = index.usuarios; 
-const usuarioValid = require('../middlewares/usuarioGeneral.valid');
+const usuarioValid = require('../middlewares/nombreGeneral.valid');
 const passValid = require('../middlewares/passGeneral.valid');
 const areaValid = require('../middlewares/areaGeneral.valid');
 const rolValid = require('../middlewares/rolGeneral.valid');
@@ -27,7 +27,7 @@ exports.consultarUsuario = async (req, res) => {
 
     const usuario = await usuarios.findByPk(id);
     if(!usuario){
-        return res.status(404).end('No existe');
+        return res.status(404).end('No existe un usuario con ese id');
     }
     res.send(usuario);
 }
@@ -459,4 +459,18 @@ exports.eliminarUsuarioId = async (req, res) => {
     else{
         return res.status(401).end('NO AUTORIZADO')
     }
+}
+
+exports.obtenerUsuario = async (req, res) => {
+    token = req.headers['x-acces-token'];
+    var decoded = jwt.decode(token);
+
+    const user = {
+        id: decoded.id,
+        usuario: decoded.usuario,
+        rol: decoded.rol,
+        area: decoded.area
+    }
+
+    return res.send(user);
 }
