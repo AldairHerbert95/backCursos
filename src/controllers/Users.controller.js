@@ -11,12 +11,6 @@ const idValid = require('../middlewares/idGeneral.valid');
 const llave = require("../secret/jwt");
 
 
-
-exports.consultar = async (req, res) => {
-    const todos = await usuarios.findAll();
-    res.send(todos);
-}
-
 // exports.consultarUsuario = async (req, res) => {
 //     const { id } = req.params;
 
@@ -32,7 +26,31 @@ exports.consultar = async (req, res) => {
 //     res.send(usuario);
 // }
 
-exports.agregar = async(req, res) => {
+exports.obtenerUsuario = async (req, res) => {
+    const token = req.headers['x-access-token'];
+
+    if(!token){
+        return res.status(401).json({message: 'Sin token'});
+    }
+    else
+    {
+        var decoded = jwt.decode(token);
+        try{
+            const user = {
+                id: decoded.id,
+                usuario: decoded.usuario,
+                rol: decoded.rol,
+                area: decoded.area
+            }
+            return res.json(user);
+        }
+        catch{
+            return res.status(500).json({message: 'Token malformado'});
+        }
+    }
+}
+
+exports.agregarUsuario = async(req, res) => {
     const { usuario, pass, rol, area } = req.body;
     const _validName = usuarioValid(usuario);
     const _validPass = passValid(pass);
@@ -84,106 +102,130 @@ exports.agregar = async(req, res) => {
 
 exports.actualizarNombre = async (req, res) => {
     const { nuevo_nombre } = req.body;
-    token = req.headers['x-acces-token'];
+    token = req.headers['x-access-token'];
     var decoded = jwt.decode(token);
 
-    const userId = decoded.id;
-
-    const usuario = await usuarios.findByPk(userId);
-    if(!usuario){
-        return res.status(404).end('No existe el usuario');
-    }
-
-    const _valid = usuarioValid(nuevo_nombre);
-    if(_valid==false){
-        return res.status(401).end('NO SE PERMITE EL NOMBRE DE USUARIO');
-    }
-
-    await usuarios.update({
-        usuario: nuevo_nombre
-    }, {where: {id: userId}}).then(data => {
-        if(data == 1){
-            res.status(200).end('EL NOMBRE SE HA ACTUALIZADO! :)');
+    try {
+        const userId = decoded.id;
+    
+        const usuario = await usuarios.findByPk(userId);
+        if(!usuario){
+            return res.status(404).end('No existe el usuario');
         }
-        else{
-            res.send('NO SE ACTUALIZÓ');
+    
+        const _valid = usuarioValid(nuevo_nombre);
+        if(_valid==false){
+            return res.status(401).end('NO SE PERMITE EL NOMBRE DE USUARIO');
         }
-        
-    }).catch(err => {
-        res.status(500);
-        console.log(err);
-    });
+
+        const registro = await usuarios.findOne({
+            where: {nuevo_nombre}
+        });
+    
+        if (registro === null) {
+            await usuarios.update({
+                usuario: nuevo_nombre
+            }, {where: {id: userId}}).then(data => {
+                if(data == 1){
+                    res.status(200).end('EL NOMBRE SE HA ACTUALIZADO! :)');
+                }
+                else{
+                    res.send('NO SE ACTUALIZÓ');
+                }
+                
+            }).catch(err => {
+                res.status(500);
+                console.log(err);
+            });
+        } 
+        else {
+            res.status(500).end('El nombre de usuario ya existe');
+        }
+    } 
+    catch {
+        return res.status(500).json({message: 'Token malformado'});
+    }
 }
 
 exports.actualizarPass = async (req, res) => {
     const { pass_actual, nueva_pass } = req.body;
 
-    token = req.headers['x-acces-token'];
+    token = req.headers['x-access-token'];
     var decoded = jwt.decode(token);
 
-    const userId = decoded.id;
-
-    const usuario = await usuarios.findByPk(userId);
-    if(!usuario){
-        return res.status(404).end('No existe el usuario');
-    }
-
-    const _validPass = passValid(pass_actual);
-    if(_validPass==false){
-        return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
-    }
-
-    const _validPass2 = passValid(nueva_pass);
-    if(_validPass2==false){
-        return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
-    }
-
-    const saltRounds = 10;
-    const pass = usuario.pass;
-    bcrypt.compare(pass_actual, pass, function(err, result) {  // Compara la pass ingresada, con la guardada
-        // Si la pass coincide...
-        if (result) {
-            bcrypt.genSalt(saltRounds, function(err, salt) {
-                bcrypt.hash(nueva_pass, salt, function(err, hash) {
-                    // Se guarda la nueva pass.
-                    usuarios.update({
-                        pass: hash
-                     }, {where: {id: userId}}).then(data => {
-                        if(data == 1){
-                            res.status(200).end('CONTRASEÑA ACTUALIZADA CORRECTAMENTE');
-                        }
-                        else{
-                            res.send('NO SE ACTUALIZÓ LA CONTRASEÑA');
-                        }
-                     }).catch(err => {
-                        res.status(500);
-                        console.log(err);
+    try {
+        const userId = decoded.id;
+    
+        const usuario = await usuarios.findByPk(userId);
+        if(!usuario){
+            return res.status(404).end('No existe el usuario');
+        }
+    
+        const _validPass = passValid(pass_actual);
+        if(_validPass==false){
+            return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
+        }
+    
+        const _validPass2 = passValid(nueva_pass);
+        if(_validPass2==false){
+            return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
+        }
+    
+        const saltRounds = 10;
+        const pass = usuario.pass;
+        bcrypt.compare(pass_actual, pass, function(err, result) {  // Compara la pass ingresada, con la guardada
+            // Si la pass coincide...
+            if (result) {
+                bcrypt.genSalt(saltRounds, function(err, salt) {
+                    bcrypt.hash(nueva_pass, salt, function(err, hash) {
+                        // Se guarda la nueva pass.
+                        usuarios.update({
+                            pass: hash
+                         }, {where: {id: userId}}).then(data => {
+                            if(data == 1){
+                                res.status(200).end('CONTRASEÑA ACTUALIZADA CORRECTAMENTE');
+                            }
+                            else{
+                                res.send('NO SE ACTUALIZÓ LA CONTRASEÑA');
+                            }
+                         }).catch(err => {
+                            res.status(500);
+                            console.log(err);
+                        });
                     });
                 });
-            });
-        }
-        // Si la pass no coincide
-        else {
-            return res.status(500).end("LA CONTRASEÑA NO COINCIDE");
-        }
-      });
+            }
+            // Si la pass no coincide
+            else {
+                return res.status(500).end("LA CONTRASEÑA NO COINCIDE");
+            }
+          });
+    } 
+    catch {
+        return res.status(500).json({message: 'Token malformado'});
+    }
 }
 
 exports.eliminarUsuario = async (req, res) => {
-    token = req.headers['x-acces-token'];
+    token = req.headers['x-access-token'];
     var decoded = jwt.decode(token);
 
-    const userId = decoded.id;
-
-    const usuario = await usuarios.findByPk(userId);
-    if(!usuario){
-        return res.status(404).end('NO EXISTE EL USUARIO');
+    try {
+        const userId = decoded.id;
+    
+        const usuario = await usuarios.findByPk(userId);
+        if(!usuario){
+            return res.status(404).end('NO EXISTE EL USUARIO');
+        }
+    
+        await usuarios.destroy({
+            where: {id: userId}
+        });
+        return res.status(200).end('USUARIO ELIMINADO');
+    } 
+    catch {
+        return res.status(500).json({message: 'Token malformado'});    
     }
-
-    await usuarios.destroy({
-        where: {id: userId}
-    });
-    return res.status(200).end('USUARIO ELIMINADO');
 }
 
 exports.login = async (req, res) => {
@@ -248,6 +290,28 @@ exports.login = async (req, res) => {
 
 //Admin
 
+exports.consultar = async (req, res) => {
+    const token = req.headers['x-access-token'];
+
+    if(!token){
+        return res.status(401).json({message: 'Sin token'});
+    }
+    else
+    {
+        var decoded = jwt.decode(token);
+        try{
+            const rol = decoded.rol;
+            if(rol === "admin"){
+                const todos = await usuarios.findAll({attributes: ['id', 'usuario', 'rol', 'area']});
+                res.send(todos)
+            }
+        }
+        catch{
+            return res.status(500).json({message: 'Token malformado'});
+        }
+    }
+}
+
 exports.actualizarNombreId = async (req, res) => {
     const { nuevo_nombre } = req.body;
     const { id } = req.params;
@@ -257,36 +321,51 @@ exports.actualizarNombreId = async (req, res) => {
         return res.status(500).end('EL ID ES INCORRECTO');
     }
    
-    token = req.headers['x-acces-token'];
+    token = req.headers['x-access-token'];
     var decoded = jwt.decode(token);
 
-    const rol = decoded.rol;
+    try {
+        const rol = decoded.rol;
 
-    if(rol === 'admin'){
-        const usuario = await usuarios.findByPk(id);
-        if(!usuario){
-            return res.status(404).end('No existe el usuario');
-        }
-        const _valid = usuarioValid(nuevo_nombre);
-        if(_valid==false){
-            return res.status(401).end('NO SE PERMITE EL NOMBRE DE USUARIO');
-        }
-        await usuarios.update({
-            usuario: nuevo_nombre},
-            {where: {id: id}}).then(data => {
-                if(data == 1){
-                    res.status(200).end('EL NOMBRE SE HA ACTUALIZADO! :)');
-                }
-                else{
-                    res.send('NO SE ACTUALIZÓ');
-                }
-            }).catch(err => {
-                res.status(500);
-                console.log(err);
+        if(rol === 'admin'){
+            const usuario = await usuarios.findByPk(id);
+            if(!usuario){
+                return res.status(404).end('No existe el usuario');
+            }
+            const _valid = usuarioValid(nuevo_nombre);
+            if(_valid==false){
+                return res.status(401).end('NO SE PERMITE EL NOMBRE DE USUARIO');
+            }
+
+            const registro = await usuarios.findOne({
+                where: {nuevo_nombre}
             });
+
+            if (registro === null) {
+                await usuarios.update({
+                    usuario: nuevo_nombre},
+                    {where: {id: id}}).then(data => {
+                        if(data == 1){
+                            res.status(200).end('EL NOMBRE SE HA ACTUALIZADO! :)');
+                        }
+                        else{
+                            res.send('NO SE ACTUALIZÓ');
+                        }
+                    }).catch(err => {
+                        res.status(500);
+                        console.log(err);
+                    });
+            }
+            else {
+                res.status(500).end('El nombre de usuario ya existe');
+            }
+        }
+        else {
+            return res.status(401).end("NO AUTURIZADO");
+        }
     }
-    else {
-        return res.status(401).end("NO AUTURIZADO");
+    catch{
+        return res.status(500).json({message: 'Token malformado'});
     }
 }
 
@@ -294,59 +373,64 @@ exports.actualizarPassId = async (req, res) => {
     const { pass_actual, nueva_pass } = req.body;
     const { id } = req.params;
 
-    token = req.headers['x-acces-token'];
+    token = req.headers['x-access-token'];
     var decoded = jwt.decode(token);
 
-    const rol = decoded.rol;
-
-    if(rol === 'admin'){
-        const usuario = await usuarios.findByPk(id);
-        if(!usuario){
-            return res.status(404).end('No existe el usuario');
-        }
-
-        const _validPass = passValid(pass_actual);
-        if(_validPass==false){
-            return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
-        }
-
-        const _validPass2 = passValid(nueva_pass);
-        if(_validPass2==false){
-            return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
-        }
-
-        const saltRounds = 10;
-        const pass = usuario.pass;
-        bcrypt.compare(pass_actual, pass, function(err, result) {  // Compara la pass ingresada, con la guardada
-            // Si la pass coincide...
-            if (result) {
-                bcrypt.genSalt(saltRounds, function(err, salt) {
-                    bcrypt.hash(nueva_pass, salt, function(err, hash) {
-                        // Se guarda la nueva pass.
-                        usuarios.update({
-                            pass: hash
-                        }, {where: {id}}).then(data => {
-                            if(data == 1){
-                                res.status(200).end('CONTRASEÑA ACTUALIZADA CORRECTAMENTE');
-                            }
-                            else{
-                                res.send('NO SE ACTUALIZÓ LA CONTRASEÑA');
-                            }
-                        }).catch(err => {
-                            res.status(500);
-                            console.log(err);
+    try {
+        const rol = decoded.rol;
+    
+        if(rol === 'admin'){
+            const usuario = await usuarios.findByPk(id);
+            if(!usuario){
+                return res.status(404).end('No existe el usuario');
+            }
+    
+            const _validPass = passValid(pass_actual);
+            if(_validPass==false){
+                return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
+            }
+    
+            const _validPass2 = passValid(nueva_pass);
+            if(_validPass2==false){
+                return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
+            }
+    
+            const saltRounds = 10;
+            const pass = usuario.pass;
+            bcrypt.compare(pass_actual, pass, function(err, result) {  // Compara la pass ingresada, con la guardada
+                // Si la pass coincide...
+                if (result) {
+                    bcrypt.genSalt(saltRounds, function(err, salt) {
+                        bcrypt.hash(nueva_pass, salt, function(err, hash) {
+                            // Se guarda la nueva pass.
+                            usuarios.update({
+                                pass: hash
+                            }, {where: {id}}).then(data => {
+                                if(data == 1){
+                                    res.status(200).end('CONTRASEÑA ACTUALIZADA CORRECTAMENTE');
+                                }
+                                else{
+                                    res.send('NO SE ACTUALIZÓ LA CONTRASEÑA');
+                                }
+                            }).catch(err => {
+                                res.status(500);
+                                console.log(err);
+                            });
                         });
                     });
-                });
-            }
-            // Si la pass no coincide
-            else {
-                return res.status(500).end("LA CONTRASEÑA NO COINCIDE");
-            }
-      });
-    }
-    else{
-        return res.status(401).end("NO AUTORIZADO");
+                }
+                // Si la pass no coincide
+                else {
+                    return res.status(500).end("LA CONTRASEÑA NO COINCIDE");
+                }
+          });
+        }
+        else{
+            return res.status(401).end("NO AUTORIZADO");
+        }
+    } 
+    catch {
+        return res.status(500).json({message: 'Token malformado'});    
     }
 }
 
@@ -359,38 +443,43 @@ exports.actualizarRol = async (req, res) => {
         return res.status(500).end('EL ID ES INCORRECTO');
     }
    
-    token = req.headers['x-acces-token'];
+    token = req.headers['x-access-token'];
     var decoded = jwt.decode(token);
 
-    const rol = decoded.rol;
-
-    if(rol === 'admin'){
-        const usuario = await usuarios.findByPk(id);
-        if(!usuario){
-            return res.status(404).end('No existe el usuario');
+    try {
+        const rol = decoded.rol;
+    
+        if(rol === 'admin'){
+            const usuario = await usuarios.findByPk(id);
+            if(!usuario){
+                return res.status(404).end('No existe el usuario');
+            }
+    
+             const _valid = rolValid(nuevo_rol);
+             if(_valid==false){
+                 return res.status(401).end('NO SE PERMITE EL ROL');
+             }
+    
+            await usuarios.update({
+                     rol: nuevo_rol
+                }, {where: {id}}).then(data => {
+                     if(data == 1){
+                         res.status(200).end('ROL ACTUALIZADO! :)');
+                     }
+                     else{
+                         res.send('NO SE ACTUALIZÓ');
+                     }
+                    }).catch(err => {
+                res.status(500);
+                console.log(err);
+            });
         }
-
-         const _valid = rolValid(nuevo_rol);
-         if(_valid==false){
-             return res.status(401).end('NO SE PERMITE EL ROL');
-         }
-
-        await usuarios.update({
-                 rol: nuevo_rol
-            }, {where: {id}}).then(data => {
-                 if(data == 1){
-                     res.status(200).end('ROL ACTUALIZADO! :)');
-                 }
-                 else{
-                     res.send('NO SE ACTUALIZÓ');
-                 }
-                }).catch(err => {
-            res.status(500);
-            console.log(err);
-        });
-    }
-    else {
-        return res.status(401).end("NO AUTURIZADO");
+        else {
+            return res.status(401).end("NO AUTURIZADO");
+        }
+    } 
+    catch {
+        return res.status(500).json({message: 'Token malformado'});    
     }
 }
 
@@ -403,89 +492,62 @@ exports.actualizarArea = async (req, res) => {
         return res.status(500).end('EL ID ES INCORRECTO');
     }
    
-    token = req.headers['x-acces-token'];
+    token = req.headers['x-access-token'];
     var decoded = jwt.decode(token);
 
-    const rol = decoded.rol;
-
-    if(rol === 'admin'){
-        const usuario = await usuarios.findByPk(id);
-        if(!usuario){
-            return res.status(404).end('NO EXISTE EL USUARIO');
-        }
-        const _valid = areaValid(nueva_area);
-        if(_valid==false){
-            return res.status(401).end('NO SE PERMITE EL AREA');
-        }
-        await usuarios.update({
-            area: nueva_area},
-            {where: {id}}).then(data => {
-            if(data == 1){
-                res.status(200).end('SE ACTUALIZÓ EL AREA! :)');
+    try {
+        const rol = decoded.rol;
+    
+        if(rol === 'admin'){
+            const usuario = await usuarios.findByPk(id);
+            if(!usuario){
+                return res.status(404).end('NO EXISTE EL USUARIO');
             }
-            else{
-                res.send('NO SE ACTUALIZÓ');
+            const _valid = areaValid(nueva_area);
+            if(_valid==false){
+                return res.status(401).end('NO SE PERMITE EL AREA');
             }
-        }).catch(err => {
-            res.status(500);
-            console.log(err);
-        });
-    }
-    else {
-        return res.status(401).end("NO AUTURIZADO");
+            await usuarios.update({
+                area: nueva_area},
+                {where: {id}}).then(data => {
+                if(data == 1){
+                    res.status(200).end('SE ACTUALIZÓ EL AREA! :)');
+                }
+                else{
+                    res.send('NO SE ACTUALIZÓ');
+                }
+            }).catch(err => {
+                res.status(500);
+                console.log(err);
+            });
+        }
+        else {
+            return res.status(401).end("NO AUTURIZADO");
+        }
+    } 
+    catch {
+        return res.status(500).json({message: 'Token malformado'});    
     }
 }
 
 exports.eliminarUsuarioId = async (req, res) => {
+    const { id, rol } = req;
 
-    const { id } = req.params;
-
-    token = req.headers['x-acces-token'];
-    var decoded = jwt.decode(token);
-
-    const rol = decoded.rol;
-    if(rol === 'admin'){
-
-        const usuario = await usuarios.findByPk(id);
-        if(!usuario){
-            return res.status(404).end('NO EXISTE EL USUARIO');
-        }
-
-        await usuarios.destroy({
-        where: {id: id}
-        });
-        return res.status(200).end('USUARIO ELIMINADO');
-    }
-    else{
-        return res.status(401).end('NO AUTORIZADO')
-    }
-}
-
-exports.obtenerUsuario = async (req, res) => {
-    const token = req.headers['x-access-token'];
-
-    if(!token){
-        console.log(token);
-        return res.status(401).json({message: 'Sin token'});
-    }
-    else
-    {
-        var decoded = jwt.decode(token);
-
-        try{
-            const user = {
-                id: decoded.id,
-                usuario: decoded.usuario,
-                rol: decoded.rol,
-                area: decoded.area
+    const rolUsuario = req.params.rol;
+    const idUsuario = Number(req.params.id);
+    console.log(idUsuario);
+    console.log(rolUsuario);
+        if(rolUsuario === 'admin' && !isNaN(idUsuario)){
+            const usuario = await usuarios.findOne({ where: {id: idUsuario}});
+            if(!usuario){
+                return res.status(404).end('NO EXISTE EL USUARIO');
             }
-            return res.json(user);
+            await usuarios.destroy({
+            where: {id: id}
+            });
+            return res.status(200).end('USUARIO ELIMINADO');
         }
-        catch{
-            return res.status(500).json({message: 'Token malformado'});
+        else{
+            return res.status(401).end('NO AUTORIZADO')
         }
-
-    }
-
-
 }

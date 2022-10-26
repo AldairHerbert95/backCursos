@@ -16,6 +16,9 @@ module.exports = (sequelize, Sequelize) => {
         },
         path: {
             type: Sequelize.TEXT
+        },
+        idupdate: {
+            type: Sequelize.INTEGER
         }
     }, {freezeTableName: true});
     return Videos
