@@ -533,11 +533,10 @@ exports.actualizarArea = async (req, res) => {
 exports.eliminarUsuarioId = async (req, res) => {
     const { id, rol } = req;
 
-    const rolUsuario = req.params.rol;
     const idUsuario = Number(req.params.id);
     console.log(idUsuario);
-    console.log(rolUsuario);
-        if(rolUsuario === 'admin' && !isNaN(idUsuario)){
+    console.log(rol);
+        if(rol === 'admin' && !isNaN(idUsuario)){
             const usuario = await usuarios.findOne({ where: {id: idUsuario}});
             if(!usuario){
                 return res.status(404).end('NO EXISTE EL USUARIO');

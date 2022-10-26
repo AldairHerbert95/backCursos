@@ -1,4 +1,5 @@
 const controlador = require('../controllers/Users.controller');
+const auth = require('../middlewares/auth.middleware');
 
 module.exports = (app) => {
     app.get("/api/obtenerUsuario", controlador.obtenerUsuario);
@@ -15,6 +16,6 @@ module.exports = (app) => {
     app.put("/api/actualizarPass/:id", controlador.actualizarPassId);
     app.put("/api/actualizarArea/:id", controlador.actualizarArea);
     app.put("/api/actualizarRol/:id", controlador.actualizarRol);
-    app.delete("/api/eliminarUsuarioId/:id", controlador.eliminarUsuarioId);
+    app.delete("/api/eliminarUsuarioId/:id", auth, controlador.eliminarUsuarioId);
 
 };

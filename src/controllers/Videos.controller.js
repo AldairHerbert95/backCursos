@@ -79,6 +79,7 @@ exports.updateNameVideo = async (req, res) => {
     //Peticion
     const { new_name } = req.body;
     const idVideo = Number(req.params.id);
+    console.log(idVideo);
     if (rol === 'admin' && !isNaN(idVideo)) {
         const _video = await videos.findByPk({ where: { id: idVideo } });
         if (_video) {
