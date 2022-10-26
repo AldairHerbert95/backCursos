@@ -534,15 +534,13 @@ exports.eliminarUsuarioId = async (req, res) => {
     const { id, rol } = req;
 
     const idUsuario = Number(req.params.id);
-    console.log(idUsuario);
-    console.log(rol);
         if(rol === 'admin' && !isNaN(idUsuario)){
             const usuario = await usuarios.findOne({ where: {id: idUsuario}});
             if(!usuario){
                 return res.status(404).end('NO EXISTE EL USUARIO');
             }
             await usuarios.destroy({
-            where: {id: id}
+            where: {id: idUsuario}
             });
             return res.status(200).end('USUARIO ELIMINADO');
         }
