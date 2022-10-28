@@ -6,7 +6,7 @@ module.exports = (app) => {
     app.get("/api/videos/:id", controlador.consultarVideo);
 
     // Admin
-    app.post("/api/videos/agregarVideo", controlador.agregarVideo);
+    app.post("/api/videos/agregarVideo", auth, controlador.agregarVideo);
     app.put('/api/videos/modificarNombre/:id', auth, controlador.updateNameVideo);
     app.put('/api/videos/modificarCurso/:id', auth, controlador.modificarCurso);
     app.delete('/api/videos/eliminarVideo/:id', auth, controlador.eliminarVideo);

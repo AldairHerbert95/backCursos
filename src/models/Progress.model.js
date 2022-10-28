@@ -1,24 +1,24 @@
-const Users = require('./Users.model');
+const UsersModel = require('./Users.model');
 const VideosModel = require('./Videos.model');
-const Videos = require('./Videos.model');
 
 module.exports = (sequelize, Sequelize) => {
     const Progress = sequelize.define("progreso", {
         id: {
             type: Sequelize.INTEGER,
-            primaryKey: true
+            primaryKey: true,
+            autoIncrement: true
         },
-        userId: {
+        id_usuario: {
             type: Sequelize.INTEGER,
             references: {
-                model: Users,
+                model: UsersModel,
                 key: 'id'
             }
         },
-        videoId: {
+        id_video: {
             type: Sequelize.INTEGER,
             references: {
-                model: Videos,
+                model: VideosModel,
                 key: 'id'
             }
         },
@@ -31,8 +31,9 @@ module.exports = (sequelize, Sequelize) => {
         }
     }, {freezeTableName: true});
 
-    Users.belongsToMany(Videos, { through: Progress });
-    Videos.belongsToMany(Users, { through: Progress });
+    // UsersModel.belongsToMany(VideosModel, { through: Progress });
+    // VideosModel.belongsToMany(UsersModel, { through: Progress });
+
     return Progress;
 };
 

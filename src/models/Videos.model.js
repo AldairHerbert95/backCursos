@@ -21,5 +21,6 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER
         }
     }, {freezeTableName: true});
-    return Videos
+
+    return Videos;
 };

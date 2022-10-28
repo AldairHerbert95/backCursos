@@ -25,7 +25,11 @@ module.exports = (sequelize, Sequelize) => {
         },
         updatedAt: {
             type: Sequelize.TIME
+        },
+        idupdate: {
+            type: Sequelize.INTEGER
         }
     }, {freezeTableName: true});
+
     return Users;
 };

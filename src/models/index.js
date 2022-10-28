@@ -23,9 +23,11 @@ var modelos = {};
 
 const Users = require('../models/Users.model')(sequelize, Sequelize);
 const Videos = require('../models/Videos.model')(sequelize, Sequelize);
+const Progress = require('../models/Progress.model')(sequelize, Sequelize);
 
 modelos.usuarios = Users;
 modelos.videos = Videos;
+modelos.progreso = Progress;
 modelos.sequelize = sequelize;
 modelos.Sequelize = Sequelize;
 

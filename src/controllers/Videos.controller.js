@@ -1,15 +1,29 @@
 const { AccessDeniedError } = require('sequelize');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 const index = require('../models');
 const videos = index.videos;
 
-const idGeneralValid = require('../middlewares/idGeneral.valid');
-const nameValid = require('../middlewares/nombreGeneral.valid');
-const textValid = require('../middlewares/validador.middleware');
-const idValid = require('../middlewares/idGeneral.valid');
-const { usuarios } = require('../models');
+//const { usuarios } = require('../models');
 
-
+var Funciones = {
+    /**
+     * @param datos Tiene que ser un array [ 'asdasd', 'asda45646sd', 64, xCosa ]
+     */
+    ValidarString: (datos) => {
+        const _longitud = datos.length;
+        var _validaciones = 0;
+        for (let i = 0; i < _longitud; i++) {
+            const element = datos[i];
+            if(element !== undefined && element !== null && typeof(element) === 'string' && element !== ""){
+                _validaciones++;
+            }
+        }
+        if(_validaciones == _longitud){
+            return true;
+        }
+        else return false;
+    }
+};
 
 
 exports.obetenerVideos = async (req, res) => {
@@ -34,16 +48,9 @@ exports.consultarVideo = async (req, res) => {
 
 //Admin
 exports.agregarVideo = async (req, res) => {
+    const { rol } = req;
+
     const { name, duration, course, path } = req.body;
-
-    const _validName = nameValid(videos);
-
-    token = req.headers['x-access-token'];
-    var decoded = jwt.decode(token);
-
-    console.log(decoded);
-    try {
-        const rol = decoded.rol;
 
         if (rol === 'admin') {
             const new_video = await videos.findOne({
@@ -67,21 +74,16 @@ exports.agregarVideo = async (req, res) => {
         } else {
             res.status(401).end('NO AUTORIZADO');
         }
-    }
-    catch {
-        return res.status(500).json({ message: 'Token malformado' });
-    }
 }
 
 exports.updateNameVideo = async (req, res) => {
     //Middleware AUTH.js
-    const { id, usuario, rol, area } = req;
+    const { id, rol } = req;
     //Peticion
     const { new_name } = req.body;
     const idVideo = Number(req.params.id);
-    console.log(idVideo);
     if (rol === 'admin' && !isNaN(idVideo)) {
-        const _video = await videos.findByPk({ where: { id: idVideo } });
+        const _video = await videos.findOne({ where: { id: idVideo } });
         if (_video) {
             const videoName = await videos.findOne({where: {name: new_name}});
             if (videoName === null) {
@@ -110,7 +112,7 @@ exports.updateNameVideo = async (req, res) => {
     else {
         return res.status(401).json({ message: 'Invalid request' });
     }
-};
+}
 
 exports.modificarCurso = async (req, res) => {
      //Middleware AUTH.js
