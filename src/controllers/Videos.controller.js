@@ -1,9 +1,6 @@
-const { AccessDeniedError } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const index = require('../models');
 const videos = index.videos;
-
-//const { usuarios } = require('../models');
 
 var Funciones = {
     /**
@@ -25,7 +22,6 @@ var Funciones = {
     }
 };
 
-
 exports.obetenerVideos = async (req, res) => {
     const todos = await videos.findAll({attributes: ['id', 'name', 'duration', 'course']});
     res.send(todos);
@@ -34,68 +30,83 @@ exports.obetenerVideos = async (req, res) => {
 exports.consultarVideo = async (req, res) => {
     const { id } = req.params;
 
-    const _valid = idValid(id);
-    if (_valid == false) {
+    if (!isNaN(id)) {
+        const video = await videos.findByPk(id, {attributes: ['id', 'name', 'duration', 'course']});
+        if (!video) {
+            return res.status(404).end('No existe un video con ese id');
+        }
+        res.send(video);
+    }
+    else
+    {
         return res.status(401).end('EL ID ES INCORRECTO');
     }
-
-    const video = await videos.findByPk(id, {attributes: ['id', 'name', 'duration', 'course']});
-    if (!video) {
-        return res.status(404).end('No existe un video con ese id');
-    }
-    res.send(video);
 }
 
 //Admin
 exports.agregarVideo = async (req, res) => {
     const { rol } = req;
 
-    const { name, duration, course, path } = req.body;
+    const { name, duration, course, area, path } = req.body;
 
-        if (rol === 'admin') {
-            const new_video = await videos.findOne({
-                where: { name }
+    const _validText = Funciones.ValidarString([name, duration, course, area, path]);
+
+    if (!_validText) {
+        res.status(500).json("Uno o mas datos son invalidos");
+    }
+    else if (rol === 'admin') {
+        const new_video = await videos.findOne({
+            where: { name }
+        });
+        if (!new_video) {
+            await videos.create({
+                name,
+                duration,
+                course,
+                area,
+                path
+            }).then(data => {
+                res.send(data);
+            }).catch(err => {
+                res.status(500);
+                console.log(err);
             });
-            if (new_video === null) {
-                await videos.create({
-                    name,
-                    duration,
-                    course,
-                    path
-                }).then(data => {
-                    res.send(data);
-                }).catch(err => {
-                    res.status(500);
-                    console.log(err);
-                });
-            } else {
-                res.status(500).end("El nombre del video ya existe."); // true
-            }
         } else {
-            res.status(401).end('NO AUTORIZADO');
+            res.status(500).json("El nombre del video ya existe."); // true
         }
+    } 
+    else {
+        res.status(401).json('NO AUTORIZADO');
+    }
 }
 
-exports.updateNameVideo = async (req, res) => {
+exports.updateVideo = async (req, res) => {
     //Middleware AUTH.js
     const { id, rol } = req;
     //Peticion
-    const { new_name } = req.body;
+    const { new_name, new_course, new_path, new_area } = req.body;
+    const _validText = Funciones.ValidarString([new_name, new_course, new_area, new_path]);
     const idVideo = Number(req.params.id);
-    if (rol === 'admin' && !isNaN(idVideo)) {
+    if (!_validText) {
+        res.status(500).json("Uno o mas datos Invalido");
+    }
+    else if (rol === 'admin' && !isNaN(idVideo)) {
         const _video = await videos.findOne({ where: { id: idVideo } });
         if (_video) {
             const videoName = await videos.findOne({where: {name: new_name}});
-            if (videoName === null) {
+            if (!videoName || _video.name === new_name) {
                 await videos.update({
                     name: new_name,
+                    course: new_course,
+                    area: new_area,
+                    path: new_path,
                     idupdate: id
                 }, { where: { id: _video.id } }).then(data => {
                     if (data != 0) {
-                        res.sendStatus(200);
+                        res.status(200).json("Modificado Correctamente");
                     }
                     else {
-                        res.sendStatus(500);
+                        res.status(500).json("No se pudo actualizar");
                     }
                 }).catch(err => {
                     res.status(500).json({ message: 'Internal error' });
@@ -106,7 +117,7 @@ exports.updateNameVideo = async (req, res) => {
             }
         }
         else {
-            return res.status(404).json({ message: 'No found' });
+            return res.status(404).json({ message: 'Not found' });
         }
     }
     else {
@@ -114,41 +125,9 @@ exports.updateNameVideo = async (req, res) => {
     }
 }
 
-exports.modificarCurso = async (req, res) => {
-     //Middleware AUTH.js
-     const { id, rol } = req;
-     //Peticion
-     const { new_course } = req.body;
-     const idVideo = Number(req.params.id);
-     if (rol === 'admin' && !isNaN(idVideo)) {
-         const _video = await videos.findOne({ where: { id: idVideo } });
-         if (_video) {
-                 await videos.update({
-                     course: new_course,
-                     idupdate: id
-                 }, { where: { id: _video.id } }).then(data => {
-                     if (data != 0) {
-                         res.sendStatus(200);
-                     }
-                     else {
-                         res.sendStatus(500);
-                     }
-                 }).catch(err => {
-                     res.status(500).json({ message: 'Internal error' });
-                 });
-         }
-         else {
-             return res.status(404).json({ message: 'Not found' });
-         }
-     }
-     else {
-         return res.status(401).json({ message: 'Invalid request' });
-     }
-}
-
 exports.eliminarVideo = async (req, res) => {
     // Middleware AUTH.js
-    const { id, rol } = req;
+    const { rol } = req;
     // Peticion
     const idVideo = Number(req.params.id);
     if (rol === 'admin' && !isNaN(idVideo)) {

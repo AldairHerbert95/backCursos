@@ -1,7 +1,7 @@
 module.exports = (req, res, next) => 
 {
     const { nuevo_nombre } = req.body;
-    const _regex = /^[A-Za-z0-9]*$/g;
+    const _regex = /^[A-Za-z0-9 _-]*$/g;
     const _valid = _regex.test(nuevo_nombre)
 
 

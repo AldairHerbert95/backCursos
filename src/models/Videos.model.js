@@ -14,6 +14,9 @@ module.exports = (sequelize, Sequelize) => {
         course: {
             type: Sequelize.TEXT
         },
+        area: {
+            type: Sequelize.TEXT
+        },
         path: {
             type: Sequelize.TEXT
         },
