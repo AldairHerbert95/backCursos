@@ -14,14 +14,14 @@ module.exports = (sequelize, Sequelize) => {
         course: {
             type: Sequelize.TEXT
         },
-        area: {
-            type: Sequelize.TEXT
-        },
         path: {
             type: Sequelize.TEXT
         },
         idupdate: {
             type: Sequelize.INTEGER
+        },
+        areas: {
+            type: Sequelize.ARRAY(Sequelize.INTEGER)
         }
     }, {freezeTableName: true});
 

@@ -32,6 +32,13 @@ var Funciones = {
             return true;
         }
         else return false;
+    },
+
+    ValidarArea: (area) => {
+        if(area>=1 && area<=5 && !isNaN(area)){
+            return true;
+        }
+        return false;
     }
 };
 
@@ -142,12 +149,16 @@ exports.agregarUsuario = async (req, res) => {
     const { id, rol } = req;
     const { nuevo_nombre, pass, rolUsuario, area } = req.body;
 
-    const _validText = Funciones.ValidarString([rolUsuario, area]);
+    const _validText = Funciones.ValidarString([rolUsuario]);
     const _validPass = Funciones.ValidarPass(pass);
+    const _validArea = Funciones.ValidarArea(area);
 
-    if (!_validText || !_validPass) {
+    if (!_validText || !_validPass || !_validArea) {
         if (_validText == false) {
             return res.status(401).end('LOS DATOS NO SON VALIDOS');
+        }
+        else if(_validArea == false){
+            return res.status(401).end('Area no valida');
         }
         else {
             return res.status(401).end('NO SE PERMITE LA CONTRASEÑA');
@@ -216,13 +227,17 @@ exports.editarUsuario = async (req, res) => {
     const { nuevo_nombre, nuevo_pass, nuevo_rol, nueva_area } = req.body;
 
     const _validPass = Funciones.ValidarPass(nuevo_pass);
-    const _validText = Funciones.ValidarString([nuevo_rol, nueva_area]);
+    const _validText = Funciones.ValidarString([nuevo_rol]);
+    const _validArea = Funciones.ValidarArea(nueva_area);
 
     const idUsuario = Number(req.params.id);
     if (rol === 'admin' && !isNaN(idUsuario)) {
-        if (!_validPass || !_validText) {
+        if (!_validPass || !_validText || !_validArea) {
             if (_validText == false) {
                 return res.status(401).json({ message: 'DATOS INVALIDOS' });
+            }
+            else if (_validArea == false) {
+                return res.status(401).json("Area No permitida");
             }
             else {
                 return res.status(401).json({ message: 'NO SE PERMITE LA CONTRASEÑA' });

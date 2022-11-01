@@ -26,6 +26,7 @@ require('./routes/Users.routes')(app);
 require("./routes/Videos.routes")(app);
 require('./routes/Progress.routes')(app);
 require("./routes/stream.routes")(app);
+require("./routes/Areas.routes")(app);
 
 
 //Web Sockets

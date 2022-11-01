@@ -15,7 +15,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT
         },        
         area: {
-            type: Sequelize.TEXT
+            type: Sequelize.INTEGER
         },
         token: {
             type: Sequelize.TEXT

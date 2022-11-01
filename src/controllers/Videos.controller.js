@@ -1,4 +1,7 @@
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const upload = multer({dest: 'uploads/'});
+const { Op } = require('sequelize');
 const index = require('../models');
 const videos = index.videos;
 
@@ -19,12 +22,29 @@ var Funciones = {
             return true;
         }
         else return false;
+    },
+
+    ValidarArea: (area) => {
+        if(area>=1 && area<=5 && !isNaN(area)){
+            return true;
+        }
+        return false;
     }
 };
 
-exports.obetenerVideos = async (req, res) => {
-    const todos = await videos.findAll({attributes: ['id', 'name', 'duration', 'course']});
-    res.send(todos);
+exports.videosArea = async (req, res) => {
+    const { area } = req;
+
+    await videos.findAndCountAll({
+        attributes: ['id', 'name', 'duration', 'course'],
+        where: {areas: {[Op.contains]: [area]}    
+        }
+    }).then(data => {
+        res.send(data);
+    }).catch(err => {
+        res.send(err);
+    });
+
 }
 
 exports.consultarVideo = async (req, res) => {
@@ -44,15 +64,27 @@ exports.consultarVideo = async (req, res) => {
 }
 
 //Admin
+exports.obetenerVideos = async (req, res) => {
+    const { rol } = req;
+    if(rol === 'admin'){
+        const todos = await videos.findAll({attributes: ['id', 'name', 'duration', 'course']});
+        res.send(todos);
+    }
+}
+
 exports.agregarVideo = async (req, res) => {
     const { rol } = req;
 
     const { name, duration, course, area, path } = req.body;
 
-    const _validText = Funciones.ValidarString([name, duration, course, area, path]);
+    const _validText = Funciones.ValidarString([name, duration, course, path]);
+    const _validArea = Funciones.ValidarArea(area);
 
     if (!_validText) {
         res.status(500).json("Uno o mas datos son invalidos");
+    }
+    else if (!_validArea) {
+        res.status(500).json("El area no es valida");
     }
     else if (rol === 'admin') {
         const new_video = await videos.findOne({
@@ -63,7 +95,7 @@ exports.agregarVideo = async (req, res) => {
                 name,
                 duration,
                 course,
-                area,
+                areas,
                 path
             }).then(data => {
                 res.send(data);
@@ -85,9 +117,10 @@ exports.updateVideo = async (req, res) => {
     const { id, rol } = req;
     //Peticion
     const { new_name, new_course, new_path, new_area } = req.body;
-    const _validText = Funciones.ValidarString([new_name, new_course, new_area, new_path]);
+    const _validText = Funciones.ValidarString([new_name, new_course, new_path]);
+    const _validArea = Funciones.ValidarArea(new_area);
     const idVideo = Number(req.params.id);
-    if (!_validText) {
+    if (!_validText || !_) {
         res.status(500).json("Uno o mas datos Invalido");
     }
     else if (rol === 'admin' && !isNaN(idVideo)) {
