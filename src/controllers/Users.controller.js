@@ -197,6 +197,7 @@ exports.agregarUsuario = async (req, res) => {
 exports.consultar = async (req, res) => {
     const { rol } = req;
     if (rol === "admin") {
+        
         const todos = await usuarios.findAll({ attributes: ['id', 'usuario', 'rol', 'area', 'createdAt', 'updatedAt'] });
         res.send(todos);
     }

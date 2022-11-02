@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const multer = require('multer');
-const upload = multer({dest: 'uploads/'});
+const path = require('path');
+const fs = require('fs');
 const { Op } = require('sequelize');
 const index = require('../models');
 const videos = index.videos;
+const areasdb = index.areas;
 
 var Funciones = {
     /**
@@ -24,11 +24,24 @@ var Funciones = {
         else return false;
     },
 
-    ValidarArea: (area) => {
-        if(area>=1 && area<=5 && !isNaN(area)){
+    ValidarAreas: async (arrayAreas) => {
+        const _longitud = arrayAreas.length;        
+        const _areas = await areasdb.findAll({attributes: ['id']});
+
+        var _validaciones = 0;
+        for (let i = 0; i < arrayAreas.length; i++) {
+            const element = arrayAreas[i];
+            var existElement = _areas.filter(el => {
+                return el.id === element
+            });
+            if(existElement.length != 0 && !isNaN(element) && element !== null){
+                _validaciones++;
+            }
+        }
+        if (_validaciones == _longitud) {
             return true;
         }
-        return false;
+        else return false;
     }
 };
 
@@ -75,16 +88,16 @@ exports.obetenerVideos = async (req, res) => {
 exports.agregarVideo = async (req, res) => {
     const { rol } = req;
 
-    const { name, duration, course, area, path } = req.body;
+    const { name, duration, course, areas, path } = req.body;
 
     const _validText = Funciones.ValidarString([name, duration, course, path]);
-    const _validArea = Funciones.ValidarArea(area);
 
+    const _validAreas = await Funciones.ValidarAreas(areas);
     if (!_validText) {
         res.status(500).json("Uno o mas datos son invalidos");
     }
-    else if (!_validArea) {
-        res.status(500).json("El area no es valida");
+    else if (!_validAreas) {
+        res.status(500).json("Valor de Areas no es valido");
     }
     else if (rol === 'admin') {
         const new_video = await videos.findOne({
@@ -116,11 +129,11 @@ exports.updateVideo = async (req, res) => {
     //Middleware AUTH.js
     const { id, rol } = req;
     //Peticion
-    const { new_name, new_course, new_path, new_area } = req.body;
+    const { new_name, new_course, new_path, new_areas } = req.body;
     const _validText = Funciones.ValidarString([new_name, new_course, new_path]);
-    const _validArea = Funciones.ValidarArea(new_area);
+    const _validAreas = await Funciones.ValidarAreas(new_areas);
     const idVideo = Number(req.params.id);
-    if (!_validText || !_) {
+    if (!_validText || !_validAreas) {
         res.status(500).json("Uno o mas datos Invalido");
     }
     else if (rol === 'admin' && !isNaN(idVideo)) {
@@ -131,7 +144,7 @@ exports.updateVideo = async (req, res) => {
                 await videos.update({
                     name: new_name,
                     course: new_course,
-                    area: new_area,
+                    areas: new_areas,
                     path: new_path,
                     idupdate: id
                 }, { where: { id: _video.id } }).then(data => {
@@ -178,3 +191,32 @@ exports.eliminarVideo = async (req, res) => {
         return res.status(401).json({message: 'Invalid request'})
     }
 } 
+
+exports.uploadVideo = async (req, res) => {
+
+    const file = req.file;
+    const body = req.body;
+
+    // const storage = multer.diskStorage({
+    //     destination: function (req, file, cb){
+    //         cb(null, '/prueba')
+    //     },
+    //     filename: function(req, file, cb){
+
+    //     }
+    // })
+
+    console.log(file, body);
+}
+
+
+exports.SaveCurso = (req, res) => {
+    const _filename = req.file.originalname;
+    const ruta = path.join(__dirname, '../../', 'uploads', 'pruebas', _filename);
+
+    if(fs.existsSync(ruta)){
+        return res.sendStatus(200);
+    }
+    else return res.sendStatus(500);
+    
+};
