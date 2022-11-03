@@ -193,20 +193,7 @@ exports.eliminarVideo = async (req, res) => {
 } 
 
 exports.uploadVideo = async (req, res) => {
-
-    const file = req.file;
-    const body = req.body;
-
-    // const storage = multer.diskStorage({
-    //     destination: function (req, file, cb){
-    //         cb(null, '/prueba')
-    //     },
-    //     filename: function(req, file, cb){
-
-    //     }
-    // })
-
-    console.log(file, body);
+    
 }
 
 
@@ -214,9 +201,18 @@ exports.SaveCurso = (req, res) => {
     const _filename = req.file.originalname;
     const ruta = path.join(__dirname, '../../', 'uploads', 'pruebas', _filename);
 
-    if(fs.existsSync(ruta)){
-        return res.sendStatus(200);
-    }
-    else return res.sendStatus(500);
+    fs.createWriteStream(ruta).write(req.file.buffer);
+
+
+    res.write("100%");
+    res.end();
+    // if(fs.existsSync(ruta)){
+    //     return res.sendStatus(200);
+    // }
+    // else return res.sendStatus(500);
     
 };
+
+// exports.SaveCurso = (req, res) => {
+
+// }
