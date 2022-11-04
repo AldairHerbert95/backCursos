@@ -4,6 +4,7 @@ const llave = require('../secret/jwt');
 const fs = require('fs');
 const { Op, where } = require('sequelize');
 const index = require('../models');
+const { any } = require('../uploaders/cursos');
 const videos = index.videos;
 const areasdb = index.areas;
 
@@ -220,14 +221,14 @@ exports.SaveCurso = (req, res) => {
 
                 fs.writeFile(ruta, req.body.base64, 'base64', function (err) {
                     if (fs.existsSync(ruta)) {
-                        const last = videos.findAll({limit: 1, order:[ [ 'createdAt', 'DESC' ]],});
+                        const last = videos.findAll({ limit: 1, order:[ [ 'createdAt', 'DESC' ]],});
                         console.log(last);
                         const idTemp = last.id;
                         const payload = {
                             id: idTemp
                         };
                         const token = jwt.sign(payload, llave.key, {
-                            expiresIn: "2h"
+                            expiresIn: "1800"
                         });
                         res.status(201).json({
                             message: "Guardando...",
