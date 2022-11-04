@@ -9,7 +9,8 @@ const server = app.listen(port);
 console.log(`Server listen on port ${port}`);
 
 
-app.use(express.json());
+app.use(express.json({limit: '100mb'}));
+app.use(express.urlencoded({limit: '100mb', extended: true, parameterLimit: 50000}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
@@ -33,19 +34,19 @@ require("./routes/Areas.routes")(app);
 const socketIO = require('socket.io');
 const io = socketIO(server);
 
-// io.on('connection', (socket) => {
-//     console.log("Nueva conexion", socket.id);
+io.on('connection', (socket) => {
+    console.log("Nueva conexion", socket.id);
 
-//     socket.on('video:tiempo', (data) => {
+    socket.on('video:tiempo', (data) => {
         
-//     })
+    })
 
-//     // socket.on('chat:message', (data) => {
-//     //     io.sockets.emit('chat:message', data);      //Emite a todos los clientes
-//     // });
+    // socket.on('chat:message', (data) => {
+    //     io.sockets.emit('chat:message', data);      //Emite a todos los clientes
+    // });
 
-//     // socket.on('chat:typing', (data) => {
-//     //     socket.broadcast.emit('chat:typing', data);       //Emite a todos menos a si mismo
-//     // });
-// });
+    // socket.on('chat:typing', (data) => {
+    //     socket.broadcast.emit('chat:typing', data);       //Emite a todos menos a si mismo
+    // });
+});
 
