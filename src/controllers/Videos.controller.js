@@ -2,9 +2,9 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const llave = require('../secret/jwt');
 const fs = require('fs');
-const { Op, where } = require('sequelize');
+const { Op } = require('sequelize');
 const index = require('../models');
-const { any } = require('../uploaders/cursos');
+const { video } = require('./streamPrueba.controller');
 const videos = index.videos;
 const areasdb = index.areas;
 
@@ -91,40 +91,52 @@ exports.obetenerVideos = async (req, res) => {
 exports.agregarVideo = async (req, res) => {
     const { rol } = req;
 
-    const { name, duration, course, areas, path } = req.body;
+    try {
+        const videoToken = req.headers['video-token'];
+        const decoded = jwt.decode(videoToken);
+        if (decoded.validarToken == true) {
+            const { name, duration, course, areas } = req.body;
 
-    const _validText = Funciones.ValidarString([name, duration, course, path]);
+            const _validText = Funciones.ValidarString([name, duration, course]);
 
-    const _validAreas = await Funciones.ValidarAreas(areas);
-    if (!_validText) {
-        res.status(500).json("Uno o mas datos son invalidos");
-    }
-    else if (!_validAreas) {
-        res.status(500).json("Valor de Areas no es valido");
-    }
-    else if (rol === 'admin') {
-        const new_video = await videos.findOne({
-            where: { name }
-        });
-        if (!new_video) {
-            await videos.create({
-                name,
-                duration,
-                course,
-                areas,
-                path
-            }).then(data => {
-                res.send(data);
-            }).catch(err => {
-                res.status(500);
-                console.log(err);
-            });
+            const _validAreas = await Funciones.ValidarAreas(areas);
+            if (!_validText) {
+                res.status(500).json("Uno o mas datos son invalidos");
+            }
+            else if (!_validAreas) {
+                res.status(500).json("Valor de Areas no es valido");
+            }
+            else if (rol === 'admin') {
+                const new_video = await videos.findOne({
+                    where: { name }
+                });
+                if (!new_video) {
+                    await videos.create({
+                        id: decoded.idTemp,
+                        name,
+                        duration,
+                        course,
+                        areas,
+                        path: decoded.path
+                    }).then(data => {
+                        res.send(data);
+                    }).catch(err => {
+                        res.status(500);
+                        console.log(err);
+                    });
+                } else {
+                    res.status(500).json("El nombre del video ya existe."); // true
+                }
+            }
+            else {
+                res.status(401).json('NO AUTORIZADO');
+            }
         } else {
-            res.status(500).json("El nombre del video ya existe."); // true
+            return res.status(401).json('Token de video Invalido')
         }
     }
-    else {
-        res.status(401).json('NO AUTORIZADO');
+    catch (err) {
+        res.status(500).json('Solicitu Invalida');
     }
 }
 
@@ -196,36 +208,61 @@ exports.eliminarVideo = async (req, res) => {
 }
 
 exports.uploadVideo = async (req, res) => {
-
 }
 
+exports.getVideo = async (req, res) => {
+    const { rol } = req;
+
+    const { id } = req.params;
+
+    // if (rol === 'alumno' || rol == 'admin') {
+        if (!isNaN(id)) {
+            const _video = await videos.findByPk(id);
+            if (_video) {
+                const _path = _video.path;
+                const curso = _video.course;
+                const ruta = path.join(__dirname, '../../', 'uploads', curso, _path);
+
+                res.sendFile(ruta);
+            } else {
+            return res.status(404).json('No existe un video con ese id')
+            }
+        } else {
+            return res.status(400).json('ID no es valido')
+        }
+    // }
+    // else {
+    //     return res.status(401).json('No autorizado');
+    // }
+}
 
 exports.SaveCurso = (req, res) => {
 
-    const { id, rol } = req;
+    const { rol } = req;
 
     if (rol === 'admin') {
         if (!req.body.base64) {
             res.status(400).json('No se recibio ningun archivo');
         }
         else {
-            const _filename = "video4" + ".mp4";
+            const _filename = "video5" + ".mp4";
             const ruta = path.join(__dirname, '../../', 'uploads', 'pruebas', _filename);
 
-            // if (fs.existsSync(ruta)) {
-            //     res.status(409).json('El nombre del archivo ya existe');
+            if (fs.existsSync(ruta)) {
+                res.status(409).json('El nombre del archivo ya existe');
 
-            // } else {
+            } else {
                 req.body.base64 = req.body.base64.replace(/^data:(.*?);base64,/, ""); // <--- make it any type
                 req.body.base64 = req.body.base64.replace(/ /g, '+'); // <--- this is important
 
-                fs.writeFile(ruta, req.body.base64, 'base64', function (err) {
+                fs.writeFile(ruta, req.body.base64, 'base64', async (err) => {
                     if (fs.existsSync(ruta)) {
-                        const last = videos.findAll({ limit: 1, order:[ [ 'createdAt', 'DESC' ]],});
-                        console.log(last);
-                        const idTemp = last.id;
+                        const last = await videos.findOne({ limit: 1, order: [['id', 'DESC']] });
+                        const idTemp = last.id + 1;
                         const payload = {
-                            id: idTemp
+                            idTemp: idTemp,
+                            path: _filename,
+                            validarToken: true
                         };
                         const token = jwt.sign(payload, llave.key, {
                             expiresIn: "1800"
@@ -237,7 +274,7 @@ exports.SaveCurso = (req, res) => {
                     }
                     else return res.status(500).send(err);
                 });
-            //}
+            }
         }
     } else {
         res.status(401).json('No autorizado');

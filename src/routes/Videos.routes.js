@@ -7,6 +7,7 @@ module.exports = (app) => {
     app.get("/api/videos", auth, controlador.obetenerVideos);
     app.post("/api/videos/agregarVideo", auth, controlador.agregarVideo);
     app.get("/api/videos/area", auth, controlador.videosArea);
+    app.get('/api/videos/play/:id', controlador.getVideo)
 
     // Admin
     app.post("/api/videos/agregarVideo", auth, controlador.agregarVideo);
