@@ -4,7 +4,6 @@ const llave = require('../secret/jwt');
 const fs = require('fs');
 const { Op } = require('sequelize');
 const index = require('../models');
-const { video } = require('./streamPrueba.controller');
 const videos = index.videos;
 const areasdb = index.areas;
 
@@ -89,7 +88,7 @@ exports.obetenerVideos = async (req, res) => {
 }
 
 exports.agregarVideo = async (req, res) => {
-    const { rol } = req;
+    const {id, rol } = req;
 
     try {
         const videoToken = req.headers['video-token'];
@@ -107,17 +106,31 @@ exports.agregarVideo = async (req, res) => {
                 res.status(500).json("Valor de Areas no es valido");
             }
             else if (rol === 'admin') {
+                const count = await videos.count({
+                    where: { course }
+                });
+                const new_path = course + "-" + (count+1) + ".mp4";
                 const new_video = await videos.findOne({
                     where: { name }
                 });
                 if (!new_video) {
+                    const rutaTemp = path.join(__dirname, '../../', 'uploads', 'pruebas', decoded.path);
+                    const rutaNueva = path.join(__dirname, '../../', 'uploads', course, new_path);
+                    const ruta = path.join(__dirname, '../../', 'uploads', course);
+                    if (fs.existsSync(ruta)) {
+                        fs.renameSync(rutaTemp, rutaNueva);
+                    } else {
+                        fs.mkdirSync(ruta, 0777);
+                        fs.renameSync(rutaTemp, rutaNueva);
+                    }
                     await videos.create({
                         id: decoded.idTemp,
                         name,
                         duration,
                         course,
                         areas,
-                        path: decoded.path
+                        path: new_path,
+                        idupdate: id
                     }).then(data => {
                         res.send(data);
                     }).catch(err => {
@@ -136,7 +149,8 @@ exports.agregarVideo = async (req, res) => {
         }
     }
     catch (err) {
-        res.status(500).json('Solicitu Invalida');
+        res.status(500).json('Solicitud Invalida');
+        console.log(err);
     }
 }
 
@@ -145,7 +159,7 @@ exports.updateVideo = async (req, res) => {
     const { id, rol } = req;
     //Peticion
     const { new_name, new_course, new_path, new_areas } = req.body;
-    const _validText = Funciones.ValidarString([new_name, new_course, new_path]);
+    const _validText = Funciones.ValidarString([new_name, new_course]);
     const _validAreas = await Funciones.ValidarAreas(new_areas);
     const idVideo = Number(req.params.id);
     if (!_validText || !_validAreas) {
@@ -160,7 +174,6 @@ exports.updateVideo = async (req, res) => {
                     name: new_name,
                     course: new_course,
                     areas: new_areas,
-                    path: new_path,
                     idupdate: id
                 }, { where: { id: _video.id } }).then(data => {
                     if (data != 0) {
@@ -194,6 +207,8 @@ exports.eliminarVideo = async (req, res) => {
     if (rol === 'admin' && !isNaN(idVideo)) {
         const _video = await videos.findOne({ where: { id: idVideo } });
         if (_video) {
+            const ruta = path.join(__dirname, '/../..', 'uploads', _video.course, _video.path);
+            fs.rmSync(ruta);
             await videos.destroy({
                 where: { id: idVideo }
             });
@@ -216,20 +231,20 @@ exports.getVideo = async (req, res) => {
     const { id } = req.params;
 
     // if (rol === 'alumno' || rol == 'admin') {
-        if (!isNaN(id)) {
-            const _video = await videos.findByPk(id);
-            if (_video) {
-                const _path = _video.path;
-                const curso = _video.course;
-                const ruta = path.join(__dirname, '../../', 'uploads', curso, _path);
+    if (!isNaN(id)) {
+        const _video = await videos.findByPk(id);
+        if (_video) {
+            const _path = _video.path;
+            const curso = _video.course;
+            const ruta = path.join(__dirname, '../../', 'uploads', curso, _path);
 
-                res.sendFile(ruta);
-            } else {
-            return res.status(404).json('No existe un video con ese id')
-            }
+            res.sendFile(ruta);
         } else {
-            return res.status(400).json('ID no es valido')
+            return res.status(404).json('No existe un video con ese id')
         }
+    } else {
+        return res.status(400).json('ID no es valido')
+    }
     // }
     // else {
     //     return res.status(401).json('No autorizado');
@@ -245,7 +260,7 @@ exports.SaveCurso = (req, res) => {
             res.status(400).json('No se recibio ningun archivo');
         }
         else {
-            const _filename = "video5" + ".mp4";
+            const _filename = "tempName" + ".mp4";
             const ruta = path.join(__dirname, '../../', 'uploads', 'pruebas', _filename);
 
             if (fs.existsSync(ruta)) {
@@ -279,4 +294,4 @@ exports.SaveCurso = (req, res) => {
     } else {
         res.status(401).json('No autorizado');
     }
-};
+}
