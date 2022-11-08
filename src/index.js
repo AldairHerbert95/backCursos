@@ -35,11 +35,18 @@ const socketIO = require('socket.io');
 const io = socketIO(server);
 
 io.on('connection', (socket) => {
-    console.log("Nueva conexion", socket.id);
 
-    socket.on('video:tiempo', (data) => {
-        
-    })
+    // Emisión Basica
+    socket.emit("Welcome", "Ahora estas conectado.");
+
+    socket.on("server", data => {
+        console.log(data);
+    });
+
+    io.emit("everyone", socket.id + " se ha conectado");
+
+
+
 
     // socket.on('chat:message', (data) => {
     //     io.sockets.emit('chat:message', data);      //Emite a todos los clientes

@@ -295,3 +295,4 @@ exports.SaveCurso = (req, res) => {
         res.status(401).json('No autorizado');
     }
 }
+
