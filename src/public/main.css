@@ -46,4 +46,13 @@ button {
     padding: 12px 0;
     width: 100%;
     border-radius: 0 0 2px 2px;
+    box-shadow: 1px 3px 5px rgba(0, 0, 0,.5);
+}
+
+#file {
+    width: 100%;
+    height: 200px;
+    padding: 12px 0;
+    border: 1px solid #ddd;
+    box-shadow: 1px 3px 5px rgba(0, 0, 0,.5);
 }

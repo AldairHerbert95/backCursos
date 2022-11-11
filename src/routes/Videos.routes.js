@@ -11,7 +11,7 @@ module.exports = (app) => {
     app.post("/api/videos/agregarVideo", auth, controlador.agregarVideo);
     app.get("/api/videos", auth, controlador.obetenerVideos);
     app.post("/api/videos/agregarVideo", auth, controlador.agregarVideo);
-    app.post('/api/videos/new/', auth, controlador.SaveCurso);
+    app.post('/api/videos/new/', controlador.SaveCurso);
     app.put('/api/videos/modificarVideo/:id', auth, controlador.updateVideo);
     app.delete('/api/videos/eliminarVideo/:id', auth, controlador.eliminarVideo);
 

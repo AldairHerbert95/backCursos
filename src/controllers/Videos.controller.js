@@ -253,9 +253,9 @@ exports.getVideo = async (req, res) => {
 
 exports.SaveCurso = (req, res) => {
 
-    const { rol } = req;
+    // const { rol } = req;
 
-    if (rol === 'admin') {
+    // if (rol === 'admin') {
         if (!req.body.base64) {
             res.status(400).json('No se recibio ningun archivo');
         }
@@ -291,8 +291,8 @@ exports.SaveCurso = (req, res) => {
                 });
             }
         }
-    } else {
-        res.status(401).json('No autorizado');
-    }
+    // } else {
+    //     res.status(401).json('No autorizado');
+    // }
 }
 

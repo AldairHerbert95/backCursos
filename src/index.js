@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const app = express();
+const cluster = require('./clusters/socketController');
 
 //Iniciar el servidor
 const port = 2000;
@@ -37,10 +38,10 @@ const io = socketIO(server);
 io.on('connection', (socket) => {
 
     // Emisión Basica
-    socket.emit("Welcome", "Ahora estas conectado.");
+    //socket.emit("Welcome", "Ahora estas conectado.");
 
-    socket.on("server", data => {
-        console.log(data);
+    socket.on("file", async (data) => {
+        await cluster.AddB64(data);
     });
 
     io.emit("everyone", socket.id + " se ha conectado");

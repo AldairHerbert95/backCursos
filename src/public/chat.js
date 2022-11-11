@@ -38,16 +38,42 @@
 
 const socket = io();
 
-socket.on("Welcome", data => {
-    const text = document.querySelector("#text");
-    text.textContent = data;
-})
+// socket.on("Welcome", data => {
+//     const text = document.querySelector("#text");
+//     text.textContent = data;
+// })
 
-const emitToServer = document.querySelector("#emit-to-server");
-emitToServer.addEventListener("click", () => {
-    socket.emit("server", "Hola, servidor :)");
-})
+const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+});
 
-socket.on("everyone", message => {
-    console.log(message);
-})
+const convertir = document.querySelector('#subir');
+convertir.addEventListener('click', () => {
+    const uploadedFile = document.querySelector('#file').files[0];
+    toBase64(uploadedFile)
+    .then(data => {
+        // console.log(data);
+        socket.emit("file", String(data).substring(0,100000));
+    })
+    .catch(err => {
+        socket.emit("file", err);
+    })
+});
+
+// socket.emit("upload", data => {
+   
+//     console.log(data);
+//     return data;
+// })
+
+// const emitToServer = document.querySelector("#emit-to-server");
+// emitToServer.addEventListener("click", () => {
+//     socket.emit("upload", s);
+// })
+
+// socket.on("everyone", message => {
+//     console.log(message);
+// })
